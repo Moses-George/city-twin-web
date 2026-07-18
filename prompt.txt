@@ -1,0 +1,9 @@
+Add scenario controls that let me duplicate my current network, apply changes (pump failure, population increase, pipe burst, new reservoir), and compare before/after metrics side by side.
+
+Enable an “Optimize Pump Schedule” action that runs energy optimization from my current pumps/valves and displays the recommended schedule plus expected daily energy cost and savings.
+
+Implement “Run Leak Detection” so it uses the edited topology and live sensor inputs (or simulated sensor readings) to update leak probabilities per node.
+
+Implement “Run Leak Detection” so it uses the edited topology and live sensor inputs (or simulated sensor readings) to update leak probabilities per node.
+
+I should be able to add hydraulic elements properties. how else did you implement it? assumptions????
