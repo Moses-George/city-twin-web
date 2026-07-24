@@ -20,11 +20,11 @@ export function loadColor(t: number): THREE.Color {
 }
 
 export function hoursLoad(b: Building, br: BuildingResult, hour: number) {
-  const shape = buildingShapeAt(b.type, hour);
-  const sum = buildingShapeSum(b.type);
-  const kwAtHour = (br.dailyKwh * shape) / sum;
+  const shape = buildingShapeAt(b?.type, hour);
+  const sum = buildingShapeSum(b?.type);
+  const kwAtHour = (br?.dailyKwh * shape) / sum;
   const solarAtHour =
-    (br.solarKwh * SOLAR_SHAPE_EXPORT[hour]) /
+    (br?.solarKwh * SOLAR_SHAPE_EXPORT[hour]) /
     SOLAR_SHAPE_EXPORT.reduce((a, v) => a + v, 0);
   const net = Math.max(0, kwAtHour - solarAtHour);
   return { kwAtHour, solarAtHour, net };
@@ -36,8 +36,8 @@ export function roadHourCongestion(
   hour: number,
 ) {
   const factor = TRAFFIC_SHAPE_EXPORT[hour];
-  const demand = rr.demand * factor;
-  const cap = rr.throughput > 0 ? rr.throughput / (rr.congestion || 1) : 1;
+  const demand = rr?.demand * factor;
+  const cap = rr?.throughput > 0 ? rr?.throughput / (rr?.congestion || 1) : 1;
   return {
     demand,
     congestion: Math.min(1, demand / Math.max(1, cap)),

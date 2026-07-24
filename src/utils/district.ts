@@ -1,4 +1,4 @@
-// District definition — 20 buildings, 10 road segments.
+// District definition — enlarged: 8 cols × 6 rows = 48 buildings, 18 road segments.
 // Deterministic layout so 3D scene, simulation and Python backend agree.
 
 export type BuildingType = "residential" | "office" | "retail" | "industrial";
@@ -7,23 +7,23 @@ export interface Building {
   id: string;
   name: string;
   type: BuildingType;
-  x: number; // grid meters
+  x: number;
   z: number;
   width: number;
   depth: number;
   floors: number;
-  baseKwhPerM2: number; // annual baseline intensity
+  baseKwhPerM2: number;
   hasSolarPotential: boolean;
 }
 
 export interface RoadSegment {
   id: string;
   name: string;
-  from: [number, number]; // x,z
+  from: [number, number];
   to: [number, number];
   lanes: number;
-  baseVehiclesPerHour: number; // free-flow demand
-  capacity: number; // vehicles/hour
+  baseVehiclesPerHour: number;
+  capacity: number;
   hasSignal: boolean;
 }
 
@@ -33,7 +33,6 @@ export interface District {
   extent: number;
 }
 
-// Simple deterministic PRNG so the district is stable.
 function mulberry32(seed: number) {
   let a = seed >>> 0;
   return () => {
@@ -56,10 +55,9 @@ const INTENSITY: Record<BuildingType, number> = {
 export function buildDistrict(): District {
   const rng = mulberry32(42);
   const buildings: Building[] = [];
-  // 4x5 grid, spaced 40m apart
-  const cols = 5;
-  const rows = 4;
-  const spacing = 40;
+  const cols = 8;
+  const rows = 6;
+  const spacing = 42;
   const originX = -((cols - 1) * spacing) / 2;
   const originZ = -((rows - 1) * spacing) / 2;
   let idx = 0;
@@ -70,16 +68,16 @@ export function buildDistrict(): District {
         type === "industrial"
           ? 1 + Math.floor(rng() * 2)
           : type === "residential"
-            ? 3 + Math.floor(rng() * 6)
-            : 2 + Math.floor(rng() * 8);
+            ? 3 + Math.floor(rng() * 7)
+            : 3 + Math.floor(rng() * 10);
       buildings.push({
         id: `B${idx + 1}`,
         name: `Block ${String.fromCharCode(65 + r)}${c + 1}`,
         type,
         x: originX + c * spacing,
         z: originZ + r * spacing,
-        width: type === "industrial" ? 26 : 18 + rng() * 6,
-        depth: type === "industrial" ? 22 : 16 + rng() * 6,
+        width: type === "industrial" ? 28 : 18 + rng() * 6,
+        depth: type === "industrial" ? 24 : 16 + rng() * 6,
         floors,
         baseKwhPerM2: INTENSITY[type] * (0.9 + rng() * 0.2),
         hasSolarPotential: type !== "industrial" ? rng() > 0.15 : rng() > 0.5,
@@ -88,113 +86,53 @@ export function buildDistrict(): District {
     }
   }
 
-  // Road segments — a simple grid: 2 horizontal + 3 vertical + 5 collectors.
   const halfW = ((cols - 1) * spacing) / 2 + spacing;
   const halfH = ((rows - 1) * spacing) / 2 + spacing;
-  const roads: RoadSegment[] = [
-    {
-      id: "R1",
-      name: "North Ave",
-      from: [-halfW, -halfH],
-      to: [halfW, -halfH],
-      lanes: 2,
-      baseVehiclesPerHour: 900,
-      capacity: 1400,
-      hasSignal: true,
-    },
-    {
-      id: "R2",
-      name: "South Ave",
-      from: [-halfW, halfH],
-      to: [halfW, halfH],
-      lanes: 2,
-      baseVehiclesPerHour: 1100,
-      capacity: 1400,
-      hasSignal: true,
-    },
-    {
-      id: "R3",
-      name: "West Blvd",
-      from: [-halfW, -halfH],
-      to: [-halfW, halfH],
-      lanes: 2,
-      baseVehiclesPerHour: 800,
-      capacity: 1400,
-      hasSignal: true,
-    },
-    {
-      id: "R4",
-      name: "East Blvd",
-      from: [halfW, -halfH],
-      to: [halfW, halfH],
-      lanes: 2,
-      baseVehiclesPerHour: 850,
-      capacity: 1400,
-      hasSignal: true,
-    },
-    {
-      id: "R5",
-      name: "Central St",
-      from: [0, -halfH],
-      to: [0, halfH],
-      lanes: 1,
-      baseVehiclesPerHour: 600,
-      capacity: 900,
-      hasSignal: false,
-    },
-    {
-      id: "R6",
-      name: "Cross A",
-      from: [-halfW, -20],
-      to: [halfW, -20],
-      lanes: 1,
-      baseVehiclesPerHour: 500,
-      capacity: 900,
-      hasSignal: false,
-    },
-    {
-      id: "R7",
-      name: "Cross B",
-      from: [-halfW, 20],
-      to: [halfW, 20],
-      lanes: 1,
-      baseVehiclesPerHour: 550,
-      capacity: 900,
-      hasSignal: false,
-    },
-    {
-      id: "R8",
-      name: "Link N",
-      from: [-40, -halfH],
-      to: [-40, 0],
-      lanes: 1,
-      baseVehiclesPerHour: 350,
-      capacity: 800,
-      hasSignal: false,
-    },
-    {
-      id: "R9",
-      name: "Link S",
-      from: [40, 0],
-      to: [40, halfH],
-      lanes: 1,
-      baseVehiclesPerHour: 380,
-      capacity: 800,
-      hasSignal: false,
-    },
-    {
-      id: "R10",
-      name: "Ring",
-      from: [-halfW, 0],
-      to: [halfW, 0],
-      lanes: 1,
-      baseVehiclesPerHour: 700,
-      capacity: 1100,
-      hasSignal: true,
-    },
-  ];
+  const roads: RoadSegment[] = [];
+  let rid = 1;
+  // horizontal roads at every other row line
+  for (let r = 0; r <= rows; r += 1) {
+    const z = originZ + (r - 0.5) * spacing;
+    const signal = r % 2 === 0;
+    roads.push({
+      id: `R${rid++}`,
+      name: `Row ${r}`,
+      from: [-halfW, z],
+      to: [halfW, z],
+      lanes: signal ? 2 : 1,
+      baseVehiclesPerHour: 500 + Math.floor(rng() * 700),
+      capacity: signal ? 1400 : 900,
+      hasSignal: signal,
+    });
+  }
+  // vertical roads at every other column line
+  for (let c = 0; c <= cols; c += 1) {
+    const x = originX + (c - 0.5) * spacing;
+    const signal = c % 2 === 0;
+    roads.push({
+      id: `R${rid++}`,
+      name: `Col ${c}`,
+      from: [x, -halfH],
+      to: [x, halfH],
+      lanes: signal ? 2 : 1,
+      baseVehiclesPerHour: 450 + Math.floor(rng() * 700),
+      capacity: signal ? 1400 : 900,
+      hasSignal: signal,
+    });
+  }
+  // ring road
+  roads.push({
+    id: `R${rid++}`,
+    name: "Ring",
+    from: [-halfW, 0],
+    to: [halfW, 0],
+    lanes: 2,
+    baseVehiclesPerHour: 900,
+    capacity: 1600,
+    hasSignal: true,
+  });
 
-  return { buildings, roads, extent: Math.max(halfW, halfH) + 30 };
+  return { buildings, roads, extent: Math.max(halfW, halfH) + 40 };
 }
 
 export const DISTRICT = buildDistrict();

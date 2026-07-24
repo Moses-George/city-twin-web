@@ -5,10 +5,12 @@ import {
   useSelector,
 } from "react-redux";
 import scenario from "./slices/scene";
+import { citytwinApi } from "./api/Citytwinapi";
 
 export const store = configureStore({
-  reducer: { scenario },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(),
+  reducer: { scenario, [citytwinApi.reducerPath]: citytwinApi.reducer },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(citytwinApi.middleware),
 });
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

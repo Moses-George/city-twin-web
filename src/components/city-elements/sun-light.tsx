@@ -1,5 +1,4 @@
 
-
 export default function SunLight({ hour }: { hour: number }) {
   // Sun arcs from east(6)->zenith(12)->west(18)
   const t = (hour - 6) / 12; // -0.5..1.5
