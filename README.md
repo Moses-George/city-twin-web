@@ -1,75 +1,87 @@
-# React + TypeScript + Vite
+# CityTwin Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The React dashboard for CityTwin, an interactive digital twin of a smart
+district. Explore a 3D city, adjust energy and mobility assumptions, and
+compare district KPIs. The browser-based simulator works on its own; connecting
+the FastAPI service enables saved scenarios, sensor data, ML predictions, and
+the live simulation stream.
 
-Currently, two official plugins are available:
+![CityTwin visual mark](./src/assets/hero.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Interactive 3D district with buildings, roads, and traffic.
+- What-if controls and presets for solar adoption, EV share, HVAC setpoint,
+  traffic-signal efficiency, outdoor temperature, and activity level.
+- District energy, comfort, congestion, and emissions KPIs.
+- Optional FastAPI integration for server simulation and saved scenarios.
+- Live WebSocket simulation, sensor-reading ingestion, and ML panels when the
+  backend is configured.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Requirements
 
-## Expanding the ESLint configuration
+- Node.js 20.19+ or 22.12+ (required by the Vite version in this project).
+- npm.
+- The [CityTwin server](../city-twin-server/README.md) is optional for local
+  simulation, but required for backend-powered features.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Run locally
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+From this directory:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```sh
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open the URL printed by Vite (normally `http://localhost:5173`). You can use
+the dashboard's local simulator without starting the backend.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Connect to the backend
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Create a `.env` file in this directory if you need to override the API
+endpoint or enable the live WebSocket stream:
 
+```dotenv
+VITE_API_URL=http://localhost:8000
+VITE_WS_URL=ws://localhost:8000
 ```
+
+The API URL defaults to `http://localhost:8000`. Set the WebSocket URL to the
+same server origin using `ws://` for local development or `wss://` over HTTPS.
+Start the backend separately, then enable **Use FastAPI backend** in the
+dashboard. The live stream can be toggled in the Live panel.
+
+## Commands
+
+```sh
+npm run dev       # Start the Vite development server
+npm run build     # Type-check and create a production build in dist/
+npm run preview   # Serve the production build locally
+npm run lint      # Run ESLint
+```
+
+## Project layout
+
+```text
+src/
+  components/     3D city elements and dashboard panels
+  pages/          Dashboard composition
+  store/          Redux state and RTK Query API client
+  utils/          District data and local simulation
+  assets/         Images and other bundled assets
+public/           Static files served as-is
+```
+
+## How it fits together
+
+```mermaid
+flowchart LR
+  UI[React dashboard] --> LOCAL[In-browser simulator]
+  UI -->|REST and WebSocket| API[CityTwin FastAPI]
+  API --> DB[(PostgreSQL)]
+  API --> ML[Optional trained ML artifacts]
+```
+
+For backend setup, API endpoints, database configuration, and model training,
+see the [server README](../city-twin-server/README.md).
